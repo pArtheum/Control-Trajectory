@@ -9,11 +9,11 @@
  * @file main.cpp
  **/
 
-#include <string>
 #include <array>
 #include <cfloat>
 #include <chrono>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <sstream>
@@ -21,12 +21,9 @@
 #include <string>
 #include <thread>
 #include <tuple>
-#include <vector>
-#include <iostream>
-#include <fstream>
 #include <typeinfo>
+#include <vector>
 
-#include "json.hpp"
 #include <carla/client/ActorBlueprint.h>
 #include <carla/client/BlueprintLibrary.h>
 #include <carla/client/Client.h>
@@ -40,19 +37,20 @@
 #include <carla/sensor/data/Image.h>
 #include "Eigen/QR"
 #include "behavior_planner_FSM.h"
+#include "json.hpp"
 #include "motion_planner.h"
+#include "pid_controller.h"
 #include "planning_params.h"
 #include "utils.h"
-#include "pid_controller.h"
 
-#include <limits>
-#include <iostream>
-#include <fstream>
-#include <uWS/uWS.h>
 #include <math.h>
-#include <vector>
-#include <cmath>
 #include <time.h>
+#include <uWS/uWS.h>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <vector>
 
 using namespace std;
 using json = nlohmann::json;
@@ -305,33 +303,30 @@ int main() {
        * TODO (step 3): compute the steer error (error_steer) from the position
        *and the desired trajectory
        **/
-      int closest_point_idx = x_points.size() - 1;
-      double closest_point_distance = std::numeric_limits<double>::max();
-
-      /**
-       * TODO (step 3): compute the steer error (error_steer) from the position
-       *and the desired trajectory
+      /** To compute either steer or velocity error we need to know the next
+       *point in the trajectory In order to do that, we will try to find the
+       *point with the smallest distance regarding our current location
        **/
-      // Find closest point in the desired trajectory
-      for (int i = 0; i < x_points.size(); ++i) {
-        double distance;
+      int next_point = (x_points.size() - 1);
+      double next_point_dist = std::numeric_limits<double>::max();
 
-        closest_point_distance =
-            std::hypot(x_points[closest_point_idx] - x_position,
-                       y_points[closest_point_idx] - y_position);
-        distance =
+      for (int i = 0; i < x_points.size(); ++i) {
+        double tmp_dist;
+
+        next_point_dist = std::hypot(x_points[next_point] - x_position,
+                                     y_points[next_point] - y_position);
+        tmp_dist =
             std::hypot(x_points[i] - x_position, y_points[i] - y_position);
-        if (distance < closest_point_distance) {
-          closest_point_idx = i;
-          closest_point_distance = distance;
+        if (next_point_dist > tmp_dist) {
+          next_point = i;
+          next_point_dist = distance;
         }
       }
 
-     // Error is the angle difference between the actual steer and the desired
-      // steer
-      double yaw_desired = angle_between_points(x_position, y_position,
-                                                x_points[closest_point_idx],
-                                                y_points[closest_point_idx]);
+      // Error needs to be computed as a difference angle between the current
+      // steer and the wanted steer
+      double yaw_desired = angle_between_points(
+          x_position, y_position, x_points[next_point], y_points[next_point]);
       error_steer = yaw_desired - yaw;
 
       /**
@@ -367,7 +362,7 @@ int main() {
        *position and the desired speed
        **/
       // modify the following line for step 2
-      error_throttle = v_points[closest_point_idx] - velocity;
+      error_throttle = v_points[next_point] - velocity;
 
       double throttle_output;
       double brake_output;
