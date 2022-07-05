@@ -9,11 +9,11 @@
  * @file main.cpp
  **/
 
+#include <string>
 #include <array>
 #include <cfloat>
 #include <chrono>
 #include <cmath>
-#include <fstream>
 #include <iostream>
 #include <random>
 #include <sstream>
@@ -21,9 +21,12 @@
 #include <string>
 #include <thread>
 #include <tuple>
-#include <typeinfo>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <typeinfo>
 
+#include "json.hpp"
 #include <carla/client/ActorBlueprint.h>
 #include <carla/client/BlueprintLibrary.h>
 #include <carla/client/Client.h>
@@ -37,20 +40,19 @@
 #include <carla/sensor/data/Image.h>
 #include "Eigen/QR"
 #include "behavior_planner_FSM.h"
-#include "json.hpp"
 #include "motion_planner.h"
-#include "pid_controller.h"
 #include "planning_params.h"
 #include "utils.h"
+#include "pid_controller.h"
 
-#include <math.h>
-#include <time.h>
-#include <uWS/uWS.h>
-#include <cmath>
-#include <fstream>
-#include <iostream>
 #include <limits>
+#include <iostream>
+#include <fstream>
+#include <uWS/uWS.h>
+#include <math.h>
 #include <vector>
+#include <cmath>
+#include <time.h>
 
 using namespace std;
 using json = nlohmann::json;
